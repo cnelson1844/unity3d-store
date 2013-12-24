@@ -84,6 +84,12 @@ namespace com.soomla.unity
 			
 #elif UNITY_IOS && !UNITY_EDITOR
 			storeController_Init(Soomla.GetInstance().customSecret);
+
+#elif UNITY_EDITOR
+			// Trigger the OnStoreControllerInitialized event wich, in turn, calls ExampleLocalStoreInfo.Init()
+			//****
+			Events.OnStoreControllerInitialized();
+
 #endif
 		}
 		

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 using com.soomla.unity;
 
@@ -43,7 +44,12 @@ namespace com.soomla.unity.example {
 		void Start () {
 			handler = new ExampleEventHandler();
 			
+			//StoreController.Initialize(new Dopa());
 			StoreController.Initialize(new MuffinRushAssets());
+
+			//****
+			// Queries the StoreInfo class for local data and outputs it to the Unity console
+			this.myTestLocalStoreInfo();
 
 			// Initialization of 'ExampleLocalStoreInfo' and some example usages in ExampleEventHandler.onStoreControllerInitialized
 		}
@@ -294,9 +300,70 @@ namespace com.soomla.unity.example {
 			if(GUI.Button(new Rect(Screen.width/2f-width/2f,Screen.height*7f/8f+borderSize,width,buttonHeight), "back")){
 				guiState = GUIState.GOODS;
 			}
+
 			GUI.DrawTexture(new Rect(Screen.width/2f-width/2f,Screen.height*7f/8f+borderSize,width,buttonHeight),(Texture2D)Resources.Load("SoomlaStore/images/back"));
 		}
 	
+		void myTestLocalStoreInfo()
+		{
+			Debug.Log("TESTING LOCAL STORE INFO+++++");
+			// Code to test the LocalStoreInfo functions
+
+			Debug.Log("++StoreInfo.GetItemByItemId()");
+			VirtualGood vg = (VirtualGood)StoreInfo.GetItemByItemId("fruit_cake");
+			Debug.Log("--- " + vg.Name);
+
+			Debug.Log("++GetVirtualCategories(): ");
+			List<VirtualCategory> lc = StoreInfo.GetVirtualCategories();
+			foreach(VirtualCategory obj in lc){
+				Debug.Log("--- " + obj.Name);
+				foreach(String GoodItemId in obj.GoodItemIds){
+					Debug.Log("----- " + GoodItemId);
+				}
+			}
+
+			Debug.Log("++GetVirtualCurrencies(): ");
+			List<VirtualCurrency> vcs = StoreInfo.GetVirtualCurrencies();
+			foreach(VirtualCurrency obj in vcs){
+				Debug.Log("--- " + obj.Name);
+			}
+
+			Debug.Log("++GetVirtualCurrencyPacks(): ");
+			List<VirtualCurrencyPack> vcpl = StoreInfo.GetVirtualCurrencyPacks();
+			foreach(VirtualCurrencyPack obj in vcpl){
+				Debug.Log("--- " + obj.Name);
+			}
+
+			Debug.Log("++GetVirtualGoods(): ");
+			List<VirtualGood> vgs = StoreInfo.GetVirtualGoods();
+			foreach(VirtualGood obj in vgs){
+				Debug.Log("--- " + obj.Name);
+			}
+
+			Debug.Log("++GetNonConsumableItems(): ");
+			List<NonConsumableItem> nci = StoreInfo.GetNonConsumableItems();
+			foreach(NonConsumableItem obj in nci){
+				Debug.Log("--- " + obj.Name);
+			}
+
+			Debug.Log("++GetCategoryForVirtualGood(): ");
+			VirtualCategory vc = StoreInfo.GetCategoryForVirtualGood("fruit_cake");
+			Debug.Log("--- " + vc.Name);
+
+			Debug.Log("++GetUpgradesForVirtualGood(): ");
+			List<UpgradeVG> vgu = StoreInfo.GetUpgradesForVirtualGood("frenzy");
+			foreach(UpgradeVG obj in vgu){
+				Debug.Log("--- " + obj.Name);
+				Debug.Log("--- obj.ItemId: " + obj.ItemId);
+				Debug.Log("--- obj.GoodItemId: " + obj.GoodItemId);
+				Debug.Log("--- obj.NextItemId: " + obj.NextItemId);
+				Debug.Log("--- obj.PrevItemId: " + obj.PrevItemId);
+				Debug.Log("--- obj.PurchaseType: " + obj.PurchaseType);
+			}
+
+
+		}
 	}
+
 }
 

@@ -16,6 +16,18 @@ namespace com.soomla.unity
 	public static class StoreInfo
 	{
 		private const string TAG = "SOOMLA StoreInfo";
+
+#if UNITY_EDITOR
+		//****
+		// Create a local copy of VirtualGoods for display in the Unity editor window 
+		private static List<VirtualCurrency>localCurrencies;
+		private static List<VirtualCurrencyPack>localCurrencyPacks;
+		private static List<VirtualGood>localVirtualGoods;
+		private static List<VirtualCategory>localCategories;
+		private static List<NonConsumableItem>localNonConsumableItems;
+
+#endif
+
 		
 #if UNITY_IOS && !UNITY_EDITOR
 		[DllImport ("__Internal")]
@@ -43,22 +55,65 @@ namespace com.soomla.unity
 		[DllImport ("__Internal")]
 		private static extern void storeAssets_Init(int version, string storeAssetsJSON);
 #endif
-			
+	
+
+
 		public static void Initialize(IStoreAssets storeAssets) {
-			
+			// Initialize
+
+#if UNITY_EDITOR
+			// Initialise lists of local data for viewing in the Unity editor
+			//**** 
+			localCurrencies = 			new List<VirtualCurrency>(storeAssets.GetCurrencies());
+			localCurrencyPacks = 		new List<VirtualCurrencyPack>(storeAssets.GetCurrencyPacks());
+			localVirtualGoods = 		new List<VirtualGood>(storeAssets.GetGoods());
+			localCategories = 			new List<VirtualCategory>(storeAssets.GetCategories());
+			localNonConsumableItems = 	new List<NonConsumableItem>(storeAssets.GetNonConsumableItems());
+
+//			Debug.Log("localCurrencies: ");
+//			foreach(VirtualCurrency vc in localCurrencies){
+//				Debug.Log(vc.Name);
+//			}
+//			
+//			Debug.Log("localCurrencyPacks: ");
+//			foreach(VirtualCurrencyPack vc in localCurrencyPacks){
+//				Debug.Log(vc.Name);
+//			}
+//			
+//			Debug.Log("localVirtualGoods: ");
+//			foreach(VirtualGood vc in localVirtualGoods){
+//				Debug.Log(vc.Name);
+//			}
+//			
+//			Debug.Log("localCategories: ");
+//			foreach(VirtualCategory vc in localCategories){
+//				Debug.Log(vc.Name);
+//			}
+//			
+//			Debug.Log("localNonConsumableItems: ");
+//			foreach(NonConsumableItem vc in localNonConsumableItems){
+//				Debug.Log(vc.Name);
+//			}
+
+#endif
+
+
 //			StoreUtils.LogDebug(TAG, "Adding currency");
 			JSONObject currencies = new JSONObject(JSONObject.Type.ARRAY);
 			foreach(VirtualCurrency vi in storeAssets.GetCurrencies()) {
 				currencies.Add(vi.toJSONObject());
+				//Debug.Log("vi.Name: " + vi.Name);
 			}
-			
+
 //			StoreUtils.LogDebug(TAG, "Adding packs");
 			JSONObject packs = new JSONObject(JSONObject.Type.ARRAY);
 			foreach(VirtualCurrencyPack vi in storeAssets.GetCurrencyPacks()) {
 				packs.Add(vi.toJSONObject());
+				//Debug.Log("vi.Name: " + vi.Name);
 			}
-			
+
 //			StoreUtils.LogDebug(TAG, "Adding goods");
+
 		    JSONObject suGoods = new JSONObject(JSONObject.Type.ARRAY);
 		    JSONObject ltGoods = new JSONObject(JSONObject.Type.ARRAY);
 		    JSONObject eqGoods = new JSONObject(JSONObject.Type.ARRAY);
@@ -104,7 +159,8 @@ namespace com.soomla.unity
 			storeAssetsObj.AddField(JSONConsts.STORE_GOODS, goods);
 			storeAssetsObj.AddField(JSONConsts.STORE_NONCONSUMABLES, nonConsumables);
 			
-			string storeAssetsJSON = storeAssetsObj.print();
+			//string storeAssetsJSON = storeAssetsObj.print();
+			//Debug.Log("storeAssetsJSON: " + storeAssetsJSON);
 			
 #if UNITY_ANDROID && !UNITY_EDITOR
 			StoreUtils.LogDebug(TAG, "pushing data to StoreAssets on java side");
@@ -143,6 +199,20 @@ namespace com.soomla.unity
 			
 			JSONObject obj = new JSONObject(json);
 			return VirtualItem.factoryItemFromJSONObject(obj);
+#elif UNITY_EDITOR
+			// Get the Virtual Good with itemId from localVirtualGoods[] and return it
+			//****
+			foreach(VirtualGood vc in localVirtualGoods){
+
+				if(vc.ItemId == itemId){
+					Debug.Log(vc.Name);
+					return vc;
+				}
+
+			}
+			Debug.Log("Item not found!!!!");
+			return null;
+
 #else
 			return null;
 #endif
@@ -169,6 +239,11 @@ namespace com.soomla.unity
 			
 			JSONObject obj = new JSONObject(nonConsJson);
 			return (PurchasableVirtualItem)VirtualItem.factoryItemFromJSONObject(obj);
+#elif UNITY_EDITOR
+			// Get the PurchasableVirtualItem from localVirtualGoods[]
+			//****
+			return null;
+
 #else
 			return null;
 #endif
@@ -195,6 +270,20 @@ namespace com.soomla.unity
 			
 			JSONObject obj = new JSONObject(json);
 			return new VirtualCategory(obj);
+#elif UNITY_EDITOR
+			// Get the VirtualCategory from localCategories[] 
+			//****
+
+			foreach(VirtualCategory obj in localCategories) {
+				foreach(String itemID in obj.GoodItemIds){
+					if(itemID == goodItemId){
+						return obj;
+					}
+				}
+			}
+			Debug.Log("Category not found!!!!");
+			return null;
+
 #else
 			return null;
 #endif
@@ -221,6 +310,12 @@ namespace com.soomla.unity
 			
 			JSONObject obj = new JSONObject(json);
 			return new UpgradeVG(obj);
+#elif UNITY_EDITOR
+			// Get the UpgradeVG from localVirtualGoods[] and return it
+			//****
+			// I am not sure what the rules for this are.
+			return null;
+
 #else
 			return null;
 #endif
@@ -247,6 +342,13 @@ namespace com.soomla.unity
 			
 			JSONObject obj = new JSONObject(json);
 			return new UpgradeVG(obj);
+#elif UNITY_EDITOR
+			// Get the UpgradeVG from localVirtualGoods[] and return it
+			// I am not entirely sure what this does.
+			// We may need to create the functionality to store upgrade infomation in Unity for testing
+			//****
+			return null;
+
 #else
 			return null;
 #endif
@@ -280,6 +382,20 @@ namespace com.soomla.unity
 			foreach(JSONObject obj in upgradesArr.list) {
 				vgus.Add(new UpgradeVG(obj));
 			}
+#elif UNITY_EDITOR
+			// Get the list of UpgradeVG's from localVirtualGoods[] and return it
+			//****
+			Debug.Log("localVirtualGoods.count: " + localVirtualGoods.Count);
+			foreach(VirtualGood obj in localVirtualGoods) {
+				if(obj.GetType() == typeof(UpgradeVG)){
+
+					UpgradeVG upgradeVG = (UpgradeVG)obj;
+					if(upgradeVG.GoodItemId == goodItemId){
+						vgus.Add((UpgradeVG)obj);
+					}
+				}
+			}
+
 #endif
 			return vgus;
 		}
@@ -312,11 +428,20 @@ namespace com.soomla.unity
 			foreach(JSONObject obj in currenciesArr.list) {
 				vcs.Add(new VirtualCurrency(obj));
 			}
+#elif UNITY_EDITOR
+			// Get the list of VirtualCurrency's from localCurrencies[] 
+			//****
+			Debug.Log("localCurrencies.count: " + localCurrencies.Count);
+			foreach(VirtualCurrency obj in localCurrencies) {
+				vcs.Add(obj);
+			}
+
 #endif
 			return vcs;
 		}
 		
 		public static List<VirtualGood> GetVirtualGoods() {
+			Debug.Log("GetVirtualGoods ");
 			StoreUtils.LogDebug(TAG, "Trying to fetch goods");
 			List<VirtualGood> virtualGoods = new List<VirtualGood>();
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -345,6 +470,13 @@ namespace com.soomla.unity
 			JSONObject goodsArr = new JSONObject(goodsJson);
 			foreach(JSONObject obj in goodsArr.list) {
 				virtualGoods.Add((VirtualGood)VirtualItem.factoryItemFromJSONObject(obj));
+			}
+#elif UNITY_EDITOR
+			// Get the list of VirtualGoods from localVirtualGoods[] and return it
+			//****
+			Debug.Log("localVirtualGoods.count: " + localVirtualGoods.Count);
+			foreach(VirtualGood obj in localVirtualGoods) {
+				virtualGoods.Add(obj);
 			}
 #endif
 			return virtualGoods;
@@ -378,6 +510,14 @@ namespace com.soomla.unity
 			foreach(JSONObject obj in packsArr.list) {
 				vcps.Add(new VirtualCurrencyPack(obj));
 			}
+#elif UNITY_EDITOR
+			// Get the list of VirtualCurrencyPack's from localCurrencyPacks[] 
+			//****
+			Debug.Log("localCurrencyPacks.count: " + localCurrencyPacks.Count);
+			foreach(VirtualCurrencyPack obj in localCurrencyPacks) {
+				vcps.Add(obj);
+			}
+
 #endif
 			return vcps;
 		}
@@ -410,6 +550,14 @@ namespace com.soomla.unity
 			foreach(JSONObject obj in nonConsArr.list) {
 				nonConsumableItems.Add(new NonConsumableItem(obj));
 			}
+#elif UNITY_EDITOR
+			// Get the list of NonConsumableItem's from localNonConsumableItems[] 
+			//**** 
+			Debug.Log("localNonConsumableItems.count: " + localNonConsumableItems.Count);
+			foreach(NonConsumableItem obj in localNonConsumableItems) {
+				nonConsumableItems.Add(obj);
+			}
+
 #endif
 			return nonConsumableItems;
 		}
@@ -442,6 +590,13 @@ namespace com.soomla.unity
 			foreach(JSONObject obj in categoriesArr.list) {
 				virtualCategories.Add(new VirtualCategory(obj));
 			}
+#elif UNITY_EDITOR
+			// Get the list of VirtualCategory's from localCategories[] 
+			//**** 
+			foreach(VirtualCategory obj in localCategories) {
+				virtualCategories.Add(obj);
+			}
+
 #endif
 			return virtualCategories;
 		}
